@@ -1,48 +1,110 @@
+
+
 import java.util.HashMap;
 import java.util.Map;
 
 public class BookMyStayApp {
+
+    // Abstract Room class
+    abstract static class Room {
+        private String roomType;
+        private int numberOfBeds;
+        private double size;
+        private double pricePerNight;
+
+        public Room(String roomType, int numberOfBeds, double size, double pricePerNight) {
+            this.roomType = roomType;
+            this.numberOfBeds = numberOfBeds;
+            this.size = size;
+            this.pricePerNight = pricePerNight;
+        }
+
+        public String getRoomType() {
+            return roomType;
+        }
+
+        public double getPricePerNight() {
+            return pricePerNight;
+        }
+
+        public void displayRoomDetails() {
+            System.out.println("Room Type: " + roomType);
+            System.out.println("Beds: " + numberOfBeds);
+            System.out.println("Size: " + size + " sqm");
+            System.out.println("Price per Night: $" + pricePerNight);
+        }
+    }
+
+    // Concrete Room Types
+    static class SingleRoom extends Room {
+        public SingleRoom() { super("Single Room", 1, 20.0, 50.0); }
+    }
+
+    static class DoubleRoom extends Room {
+        public DoubleRoom() { super("Double Room", 2, 30.0, 80.0); }
+    }
+
+    static class SuiteRoom extends Room {
+        public SuiteRoom() { super("Suite Room", 3, 50.0, 150.0); }
+    }
+
+    // Inventory class (centralized, read access allowed)
     static class RoomInventory {
         private Map<String, Integer> inventory;
+
         public RoomInventory() {
             inventory = new HashMap<>();
         }
+
         public void addRoomType(String roomType, int count) {
             inventory.put(roomType, count);
         }
+
         public int getAvailability(String roomType) {
             return inventory.getOrDefault(roomType, 0);
         }
-        public void updateAvailability(String roomType, int count) {
-            if (inventory.containsKey(roomType)) {
-                inventory.put(roomType, count);
-            } else {
-                System.out.println("Room type " + roomType + " not found in inventory.");
-            }
+    }
+
+    // Search service (read-only)
+    static class RoomSearchService {
+        private RoomInventory inventory;
+        private Room[] rooms;
+
+        public RoomSearchService(RoomInventory inventory, Room[] rooms) {
+            this.inventory = inventory;
+            this.rooms = rooms;
         }
-        public void displayInventory() {
-            System.out.println("Current Room Inventory:");
-            for (Map.Entry<String, Integer> entry : inventory.entrySet()) {
-                System.out.println(entry.getKey() + " -> Available: " + entry.getValue());
+
+        public void displayAvailableRooms() {
+            System.out.println("Available Rooms for Booking:\n");
+            for (Room room : rooms) {
+                int available = inventory.getAvailability(room.getRoomType());
+                if (available > 0) {
+                    room.displayRoomDetails();
+                    System.out.println("Available: " + available + "\n");
+                }
             }
         }
     }
 
     public static void main(String[] args) {
+        // Initialize inventory
         RoomInventory inventory = new RoomInventory();
         inventory.addRoomType("Single Room", 5);
-        inventory.addRoomType("Double Room", 3);
+        inventory.addRoomType("Double Room", 0);  // No availability
         inventory.addRoomType("Suite Room", 2);
-        System.out.println("Welcome to Book My Stay - Centralized Room Inventory (v3.1)\n");
-        inventory.displayInventory();
-        System.out.println("\nBooking one Single Room...");
-        inventory.updateAvailability("Single Room", inventory.getAvailability("Single Room") - 1);
 
-        System.out.println("\nUpdated Inventory:");
-        inventory.displayInventory();
+        // Initialize room objects
+        Room[] rooms = { new SingleRoom(), new DoubleRoom(), new SuiteRoom() };
 
-        System.out.println("\nInventory setup completed successfully.");
+        // Initialize search service
+        RoomSearchService searchService = new RoomSearchService(inventory, rooms);
+
+        System.out.println("Book My Stay - Room Search & Availability (v4.0)\n");
+
+        // Perform search (read-only)
+        searchService.displayAvailableRooms();
+
+        System.out.println("Room search completed successfully.");
     }
 }
-
-
